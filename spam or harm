@@ -1,0 +1,86 @@
+#importing the dependencies
+import pandas as pd
+import numpy as np
+import matplotlib as plt
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction import text
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+#Data collection & pre processing
+#import data set
+data = pd.read_csv("C:/Users/ajith/Downloads/mail_data.csv")
+print(data)
+
+#REPLACE NULL VALUES
+mail_data = data.where((pd.notnull(data)),'')
+
+#PRINTING THE FIRST 5 ROWS OF THE DATA frame
+print(mail_data.head())
+
+#CHECKING THE NUMBER OF ROWS AND COLUMS IN THE DATA FRAME
+print(mail_data.shape)
+
+#label encoding (str to numrc)
+#label spam mail as 0; ham mail as 1;
+mail_data.loc[mail_data['Category'] == 'spam' , 'Category' ,] = 0
+mail_data.loc[mail_data['Category'] == 'ham' , 'Category' ,] = 1
+
+#SEPARATING THE DATA AS TEXTS AND LABEL
+X = mail_data['Message']
+Y = mail_data['Category']
+
+print(X)
+print(Y)
+
+#SPLITING THE DATA INTO TRAINING DATA AND TESTING DATA
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=3)
+print(X.shape)# Total data 100%
+print(X_train.shape) #80% train data
+print(X_test.shape) #20% test data
+
+#FEATUTE SCALLING(convert text data to numeric data)
+#transform the text data to feature vectors that can be used as input to the logistic regression
+feature_extraction = TfidfVectorizer(min_df = 1, stop_words= 'english', lowercase=True)
+
+X_train_features = feature_extraction.fit_transform(X_train)
+X_test_features = feature_extraction.transform(X_test)
+
+#CONVERT Y_TRAIN & Y_TEST VALUES AS INT:
+Y_train = Y_train.astype('int')
+Y_test = Y_test.astype('int')
+
+print(X_train_features)
+
+#TRAINING THE MODEL
+#Logistic regression
+model = LogisticRegression()
+#training the logestic regression model with the training data
+model.fit(X_train_features,Y_train)
+
+#EVALUATING THE TRAINING DATA
+#prediction on training data
+prediction_on_training_data = model.predict(X_train_features)
+accuracy_on_training_data = accuracy_score(Y_train, prediction_on_training_data)
+print('accuracy on training data :',accuracy_on_training_data)
+
+#prediction on test data
+prediction_on_test_data = model.predict(X_test_features)
+accuracy_on_test_data = accuracy_score(Y_test, prediction_on_test_data)
+print('accuracy on test data :',accuracy_on_test_data)
+
+#BUILDING IN A PREDICTIVE SYSTEM
+input_mail = ["Free entry in 2 a wkly comp to win FA Cup final tkts 21st May 2005. Text FA to 87121 to receive entry question(std txt rate)T&C's apply 08452810075over18's"]
+
+#Convert text to feature vectors
+input_data_features = feature_extraction.transform(input_mail)
+
+#Making prediction
+prediction = model.predict(input_data_features)
+print(prediction)
+
+if (prediction[0]==1):
+    print("This is harm mail")
+else:
+    print("This is spam mail")
+    
